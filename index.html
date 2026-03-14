@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#C96B8A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Mama Moves">
+<meta name="description" content="Pregnancy & postpartum fitness tracker">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<title>Mama Moves</title>
+<style>
+/* ── Reset & base ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; -webkit-text-size-adjust: 100%; }
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  background: #F0EDE8;
+  color: #1A1A1C;
+  min-height: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Tokens ───────────────────────────────────────────── */
+:root {
+  --sage:        #4D8067;
+  --sage-light:  #E8F2EC;
+  --sage-mid:    #9AC9B2;
+  --sage-dark:   #2D5545;
+
+  --amber:       #B8722A;
+  --amber-light: #FAF0E0;
+  --amber-mid:   #DFB070;
+  --amber-dark:  #7A4C1A;
+
+  --rose:        #B85A7A;
+  --rose-light:  #F8E8EF;
+  --rose-mid:    #DDA0BB;
+  --rose-dark:   #7A3050;
+
+  --purple:      #6E52A0;
+  --purple-light:#F0EAF8;
+  --purple-mid:  #B8A0D8;
+  --purple-dark: #422E65;
+
+  --dark:  #1A1A1C;
+  --mid:   #62626A;
+  --soft:  #9898A4;
+  --bg:    #F0EDE8;
+  --surface: #FFFFFF;
+  --border: #E2DDD8;
+  --border-soft: #EDE9E4;
+
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-pill: 100px;
+}
+
+/* ── Layout ───────────────────────────────────────────── */
+#app-root { display: flex; flex-direction: column; min-height: 100dvh; }
+
+.app-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  padding-top: env(safe-area-inset-top);
+}
+
+.header-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 14px 18px 10px;
+  gap: 12px;
+}
+
+.header-left { flex: 1; }
+
+.app-logo {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--dark);
+  margin-bottom: 8px;
+}
+.app-logo em { color: var(--rose); font-style: italic; }
+
+.week-row { display: flex; align-items: center; gap: 8px; }
+.week-label { font-size: 12px; color: var(--soft); font-weight: 500; }
+.week-input {
+  width: 54px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 4px 8px;
+  font-size: 13px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  color: var(--dark);
+  background: var(--bg);
+  text-align: center;
+  -webkit-appearance: none;
+}
+.week-input:focus { outline: none; border-color: var(--rose-mid); }
+
+/* Progress ring */
+.header-right { flex-shrink: 0; padding-top: 2px; }
+.progress-ring-wrap { position: relative; width: 44px; height: 44px; }
+.progress-ring { width: 44px; height: 44px; transform: rotate(-90deg) scale(1); }
+.ring-label {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 600; color: var(--mid);
+}
+
+/* Phase nav */
+.phase-nav {
+  display: flex;
+  gap: 6px;
+  padding: 0 18px 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.phase-nav::-webkit-scrollbar { display: none; }
+
+.phase-btn {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 7px 12px;
+  border-radius: var(--r-pill);
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  transition: all .18s;
+  gap: 1px;
+}
+.phase-btn-name { font-size: 12px; font-weight: 600; color: var(--mid); line-height: 1.2; }
+.phase-btn-sub { font-size: 10px; color: var(--soft); line-height: 1; }
+
+.phase-btn.active-p1  { background: var(--sage-light);   border-color: var(--sage-mid);   }
+.phase-btn.active-p1 .phase-btn-name  { color: var(--sage-dark); }
+.phase-btn.active-p2  { background: var(--amber-light);  border-color: var(--amber-mid);  }
+.phase-btn.active-p2 .phase-btn-name  { color: var(--amber-dark); }
+.phase-btn.active-p3a { background: var(--rose-light);   border-color: var(--rose-mid);   }
+.phase-btn.active-p3a .phase-btn-name { color: var(--rose-dark); }
+.phase-btn.active-p3b { background: var(--purple-light); border-color: var(--purple-mid); }
+.phase-btn.active-p3b .phase-btn-name { color: var(--purple-dark); }
+
+/* Main scroll */
+.main-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 14px env(safe-area-inset-bottom);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Phase card */
+.phase-card {
+  border-radius: var(--r-lg);
+  padding: 18px 20px;
+  margin-bottom: 12px;
+  color: #fff;
+}
+.phase-card--p1  { background: linear-gradient(135deg, #2D5545 0%, #4D8067 100%); }
+.phase-card--p2  { background: linear-gradient(135deg, #7A4C1A 0%, #B8722A 100%); }
+.phase-card--p3a { background: linear-gradient(135deg, #7A3050 0%, #B85A7A 100%); }
+.phase-card--p3b { background: linear-gradient(135deg, #422E65 0%, #6E52A0 100%); }
+.phase-card-title { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 4px; }
+.phase-card-sub { font-size: 12px; opacity: 0.85; margin-bottom: 12px; }
+.tag-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag {
+  font-size: 11px; font-weight: 500;
+  background: rgba(255,255,255,0.18);
+  padding: 3px 10px; border-radius: var(--r-pill);
+}
+
+/* Safety */
+.safety-box {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: #FFF9E6;
+  border: 1px solid #F0D888;
+  border-radius: var(--r-md);
+  padding: 11px 13px;
+  margin-bottom: 14px;
+}
+.safety-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+.safety-text { font-size: 12px; color: #6A5200; line-height: 1.55; }
+
+/* Section label */
+.section-label {
+  font-size: 10px; font-weight: 700;
+  color: var(--soft);
+  text-transform: uppercase;
+  letter-spacing: 0.9px;
+  margin-bottom: 8px;
+}
+
+/* Day pills */
+.day-pills-wrap { margin-bottom: 14px; }
+.day-pills {
+  display: flex; gap: 6px;
+  overflow-x: auto; scrollbar-width: none; padding-bottom: 2px;
+}
+.day-pills::-webkit-scrollbar { display: none; }
+.day-pill {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: var(--r-pill);
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px; font-weight: 600;
+  color: var(--mid);
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.day-pill.rest-pill { color: var(--soft); border-style: dashed; }
+.day-pill.active {
+  background: var(--dark); color: #fff; border-color: var(--dark);
+  border-style: solid;
+}
+
+/* Workout header */
+.workout-header {
+  background: var(--surface);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  border: 1px solid var(--border-soft);
+}
+.workout-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 20px; margin-bottom: 8px;
+}
+.meta-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.meta-chip {
+  font-size: 11px; font-weight: 500;
+  background: var(--sage-light); color: var(--sage-dark);
+  padding: 3px 10px; border-radius: var(--r-pill);
+}
+.meta-chip--amber { background: var(--amber-light); color: var(--amber-dark); }
+
+/* Exercise card */
+.ex-card {
+  background: var(--surface);
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-soft);
+  margin-bottom: 8px;
+  overflow: hidden;
+  transition: border-color .2s;
+}
+.ex-card.ex-complete { border-color: var(--sage-mid); }
+
+.ex-head {
+  padding: 12px 14px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  user-select: none;
+}
+.ex-head-left { flex: 1; min-width: 0; }
+.ex-name { font-size: 14px; font-weight: 600; color: var(--dark); margin-bottom: 5px; }
+.ex-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 2px; }
+.ex-chip {
+  font-size: 10px; font-weight: 500;
+  background: var(--bg);
+  color: var(--mid);
+  padding: 2px 8px; border-radius: 6px;
+}
+.set-progress { font-size: 10px; color: var(--sage); font-weight: 600; margin-top: 3px; }
+.ex-chevron { font-size: 10px; color: var(--soft); flex-shrink: 0; padding-top: 3px; transition: transform .15s; }
+.ex-chevron.open { transform: none; }
+
+/* Exercise body */
+.ex-body { border-top: 1px solid var(--border-soft); }
+.ex-note {
+  padding: 10px 14px;
+  font-size: 12px; color: var(--mid); line-height: 1.6;
+  background: #FAFAF8;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+/* Set logger */
+.set-logger { padding: 10px 14px 14px; }
+.set-header-row {
+  display: flex; gap: 4px; margin-bottom: 7px;
+}
+.sh-cell {
+  flex: 1; font-size: 10px; font-weight: 700;
+  color: var(--soft); text-transform: uppercase; letter-spacing: 0.5px;
+  text-align: center;
+}
+.sh-cell.narrow { flex: 0.45; }
+
+.set-row { display: flex; align-items: center; gap: 4px; margin-bottom: 6px; }
+.set-num { width: 16px; font-size: 11px; font-weight: 600; color: var(--soft); text-align: center; flex-shrink: 0; }
+
+.set-input {
+  flex: 1;
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  padding: 7px 4px;
+  font-size: 13px; font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
+  text-align: center;
+  color: var(--dark);
+  background: var(--bg);
+  -webkit-appearance: none;
+  transition: border-color .15s, background .15s;
+}
+.set-input:focus { outline: none; border-color: var(--sage-mid); background: var(--surface); }
+.set-input.done { background: var(--sage-light); border-color: var(--sage-mid); color: var(--sage-dark); }
+
+.check-btn {
+  flex: 0.45;
+  height: 34px;
+  border-radius: 9px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all .15s;
+  display: flex; align-items: center; justify-content: center;
+  color: transparent;
+}
+.check-btn.checked {
+  background: var(--sage); border-color: var(--sage);
+  color: #fff;
+}
+
+.add-set-btn {
+  width: 100%;
+  padding: 8px;
+  border: 1.5px dashed var(--border);
+  border-radius: 10px;
+  background: none;
+  font-size: 12px; font-weight: 500;
+  color: var(--soft);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  margin-top: 6px;
+  transition: all .15s;
+}
+.add-set-btn:active { border-color: var(--sage); color: var(--sage); }
+
+/* Cardio card */
+.cardio-card {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  transition: border-color .2s;
+}
+.cardio-card.cardio-done { border-color: var(--sage-mid); }
+.cardio-name { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.cardio-spec { font-size: 12px; color: var(--mid); line-height: 1.7; }
+.cardio-note { font-size: 11px; color: var(--soft); font-style: italic; margin-top: 4px; line-height: 1.5; }
+.cardio-log-row { display: flex; gap: 8px; margin-top: 10px; }
+.cardio-input {
+  flex: 1;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 12px; font-family: 'DM Sans', sans-serif;
+  color: var(--dark); background: var(--bg);
+}
+.cardio-input:focus { outline: none; border-color: var(--sage-mid); }
+.cardio-btn {
+  padding: 8px 14px;
+  border-radius: 10px; border: none;
+  background: var(--sage); color: #fff;
+  font-size: 12px; font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer; white-space: nowrap;
+  transition: background .15s;
+}
+.cardio-btn.done { background: var(--sage-dark); }
+
+/* Rest card */
+.rest-card {
+  background: var(--surface);
+  border: 1.5px dashed var(--border);
+  border-radius: var(--r-lg);
+  padding: 28px 20px;
+  text-align: center;
+  margin-bottom: 10px;
+}
+.rest-emoji { font-size: 36px; margin-bottom: 10px; }
+.rest-title { font-family: 'DM Serif Display', serif; font-size: 20px; margin-bottom: 8px; }
+.rest-note { font-size: 13px; color: var(--mid); line-height: 1.65; max-width: 320px; margin: 0 auto; }
+
+/* History */
+.history-list {
+  background: var(--surface);
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-soft);
+  overflow: hidden;
+}
+.history-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 12px;
+}
+.history-item:last-child { border-bottom: none; }
+.history-date { color: var(--soft); font-weight: 600; flex-shrink: 0; min-width: 50px; }
+.history-detail { color: var(--mid); }
+
+/* Install banner */
+.install-banner {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--dark); color: #fff;
+  padding: 12px 18px 18px;
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 12px; z-index: 300;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  animation: slideUp .3s ease;
+}
+.install-text { font-size: 13px; line-height: 1.4; }
+.install-text strong { display: block; margin-bottom: 2px; }
+.install-btns { display: flex; gap: 8px; flex-shrink: 0; }
+.install-btn {
+  padding: 8px 14px; border-radius: 10px; border: none;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+.install-btn--yes { background: var(--rose); color: #fff; }
+.install-btn--no { background: rgba(255,255,255,0.12); color: #fff; }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+</style>
+</head>
+<body>
+<div id="app-root"></div>
+<script src="/data.js"></script>
+<script src="/app.js"></script>
+<script>
+// PWA install prompt
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Show install banner after a small delay
+  if (!localStorage.getItem('mm-install-dismissed')) {
+    setTimeout(showInstallBanner, 2500);
+  }
+});
+
+function showInstallBanner() {
+  if (document.getElementById('install-banner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'install-banner';
+  banner.className = 'install-banner';
+  banner.innerHTML = `
+    <div class="install-text">
+      <strong>Add to Home Screen</strong>
+      Use Mama Moves offline, anytime.
+    </div>
+    <div class="install-btns">
+      <button class="install-btn install-btn--no" onclick="dismissInstall()">Later</button>
+      <button class="install-btn install-btn--yes" onclick="doInstall()">Install</button>
+    </div>`;
+  document.body.appendChild(banner);
+}
+
+function doInstall() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+  }
+  dismissInstall();
+}
+
+function dismissInstall() {
+  localStorage.setItem('mm-install-dismissed', '1');
+  document.getElementById('install-banner')?.remove();
+}
+
+// iOS install hint (Safari doesn't support beforeinstallprompt)
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+if (isIOS && !isStandalone && !localStorage.getItem('mm-install-dismissed')) {
+  setTimeout(() => {
+    if (document.getElementById('install-banner')) return;
+    const banner = document.createElement('div');
+    banner.id = 'install-banner';
+    banner.className = 'install-banner';
+    banner.innerHTML = `
+      <div class="install-text">
+        <strong>Add to Home Screen</strong>
+        Tap the Share button, then "Add to Home Screen."
+      </div>
+      <div class="install-btns">
+        <button class="install-btn install-btn--no" onclick="dismissInstall()">Got it</button>
+      </div>`;
+    document.body.appendChild(banner);
+  }, 2500);
+}
+</script>
+</body>
+</html>
